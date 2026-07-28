@@ -383,6 +383,43 @@ function enhanceCodeBlocks(scope) {
     });
 }
 
+// 需要登录 Puter 时，展示一个明确的一键登录卡片（而非晦涩报错）
+function showAuthCard() {
+    const div = document.createElement('div');
+    div.className = 'message message-ai';
+    div.innerHTML = `
+        <div class="message-avatar"><i class="fas fa-robot"></i></div>
+        <div class="message-content">
+            <div class="message-bubble">
+                <div class="auth-card">
+                    <div class="auth-emoji">🔓</div>
+                    <p>免费登录 <b>Puter</b> 即可使用 GPT-5.5（<b>无需信用卡</b>），这是免费 GPT 模型的唯一要求。</p>
+                    <button class="auth-login-btn" id="puterLoginBtn"><i class="fas fa-user"></i> 一键登录 Puter（免费）</button>
+                    <p class="auth-hint">登录一次后永久免费，刷新也保持登录。或点右上角钥匙配置自己的 API Key。</p>
+                </div>
+            </div>
+        </div>`;
+    chatMessages.appendChild(div);
+    const btn = div.querySelector('#puterLoginBtn');
+    const hint = div.querySelector('.auth-hint');
+    btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在打开登录…';
+        try {
+            if (typeof puter === 'undefined' || !puter.auth) throw new Error('Puter 未加载');
+            await puter.auth.signIn();
+            div.remove();
+            addAssistantMessageToUI('✅ 已登录 Puter！现在可以直接对话了，点下面的推荐或输入问题试试 👇', true);
+            chatInput.focus();
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-user"></i> 一键登录 Puter（免费）';
+            hint.textContent = '登录未完成（可能被关闭）。请重试，或点右上角钥匙配置 API Key。';
+        }
+    });
+    scrollToBottom();
+}
+
 function removeEmptyState() {
     const empty = chatMessages.querySelector('.chat-empty');
     if (empty) empty.remove();
@@ -458,21 +495,25 @@ async function handleSendMessage() {
         saveConversations();
     } catch (err) {
         console.error('[chat] 错误:', err);
-        let msg = err.message || '出错了，请稍后再试';
-        if (/auth|login|sign in|未登录/i.test(msg)) {
-            msg = '需要登录 Puter 账号才能免费使用（免费注册 puter.com）。或点击右上角钥匙配置自定义 API。';
+        const msg = err.message || '出错了，请稍后再试';
+        if (/auth|login|sign in|未登录|not authenticated|unauthenticated|restricted/i.test(msg)) {
+            // 需要登录：移除空气泡，改显示一键登录卡片
+            if (bubble && bubble.wrapper && bubble.wrapper.parentNode) bubble.wrapper.remove();
+            showAuthCard();
+            return;
         } else if (/quota|limit|rate|429/i.test(msg)) {
-            msg = '当前模型触发限流，换一个免费模型再试（如 GPT-5 Nano）。';
+            showErrorInBubble(bubble, '当前模型触发限流，换一个免费模型再试（如 GPT-5 Nano）。');
         } else if (/model/i.test(msg)) {
             // 模型不可用，回退到 gpt-5-nano
             try {
                 chatSettings.model = 'gpt-5-nano';
                 saveChatSettings();
                 syncModelSelector();
-                msg = `模型不可用，已自动切换到 GPT-5 Nano，请重新发送。`;
-            } catch (e) {}
+                showErrorInBubble(bubble, `模型不可用，已自动切换到 GPT-5 Nano，请重新发送。`);
+            } catch (e) { showErrorInBubble(bubble, msg); }
+        } else {
+            showErrorInBubble(bubble, msg);
         }
-        showErrorInBubble(bubble, msg);
     } finally {
         isGenerating = false;
         setStopUI(false);

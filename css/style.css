@@ -2252,3 +2252,33 @@ img { max-width: 100%; }
 .chat-app .chat-messages { max-height: none; }
 /* 模型下拉里的徽标贴近名称 */
 .model-option .model-badge { margin-left: 6px; }
+
+/* 一键登录卡片（Puter 免费用） */
+.auth-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 6px;
+    text-align: center;
+}
+.auth-card .auth-emoji { font-size: 30px; }
+.auth-card p { margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.auth-card .auth-hint { font-size: 11px; color: var(--text-tertiary); }
+.auth-login-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border: none;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(79,110,247,.35);
+}
+.auth-login-btn:hover { transform: translateY(-1px); }
+.auth-login-btn:disabled { opacity: .7; cursor: default; transform: none; }
