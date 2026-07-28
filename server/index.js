@@ -1,34 +1,38 @@
 /**
- * AIæ™ºèƒ½å·¥å…·ç®± - ä¸€ä½“åŒ–æœåŠ¡ï¼ˆå‰ç«¯é™æ€ + åç«¯APIä»£ç†ï¼‰
+ * AIÖÇÄÜ¹¤¾ßÏä - Ò»Ìå»¯·şÎñ£¨Ç°¶Ë¾²Ì¬ + ºó¶ËAPI´úÀí£©
  *
- * æ”¯æŒ: GitHub Models / ChatAnywhere / OpenRouter / Groq / Google Gemini
- * å‰ç«¯ â†’ æœ¬æœåŠ¡(ä»£ç†) â†’ å…è´¹AI API
+ * Ö§³Ö: GitHub Models / ChatAnywhere / OpenRouter / Groq / Google Gemini
+ * Ç°¶Ë ¡ú ±¾·şÎñ(´úÀí) ¡ú Ãâ·ÑAI API
  *
- * æ³¨ï¼šGitHub Pages ç­‰çº¯é™æ€æ‰˜ç®¡æ— æ³•è¿è¡Œæ­¤åç«¯ï¼Œå‰ç«¯ä¼šæ”¹ç”¨ Puter.js å…è´¹ç›´è¿ã€‚
- * æœ¬åç«¯ç”¨äºæœ¬åœ°æˆ–è‡ªæ‰˜ç®¡åœºæ™¯ï¼Œå¹¶æ”¯æŒ SSE æµå¼è¾“å‡ºã€‚
+ * ×¢£ºGitHub Pages µÈ´¿¾²Ì¬ÍĞ¹ÜÎŞ·¨ÔËĞĞ´Ëºó¶Ë£¬Ç°¶Ë»á¸ÄÓÃ Puter.js Ãâ·ÑÖ±Á¬¡£
+ * ±¾ºó¶ËÓÃÓÚ±¾µØ»ò×ÔÍĞ¹Ü³¡¾°£¬²¢Ö§³Ö SSE Á÷Ê½Êä³ö¡£
+ *
+ * °²È«£ºÓÃ»§µÄ GitHub Token ½ö´æÔÚÓÚ·şÎñ¶Ë£¨gh auth token / GITHUB_TOKEN »·¾³±äÁ¿£©£¬
+ * ¾ø²»Í¨¹ı /api/config »òÈÎºÎ½Ó¿Ú·µ»Ø¸øä¯ÀÀÆ÷¡£
  */
 
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
 // =============================================
-// ä¸­é—´ä»¶
+// ÖĞ¼ä¼ş
 // =============================================
 app.use(cors({ origin: true, methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'X-API-Key', 'X-Provider'] }));
 app.use(express.json({ limit: '2mb' }));
 
 // =============================================
-// é™æ€æ–‡ä»¶æœåŠ¡ï¼ˆå‰ç«¯ï¼‰
+// ¾²Ì¬ÎÄ¼ş·şÎñ£¨Ç°¶Ë£©
 // =============================================
 const frontendPath = path.resolve(__dirname, '..');
 app.use(express.static(frontendPath));
 
 // =============================================
-// æœåŠ¡å•†é…ç½®
+// ·şÎñÉÌÅäÖÃ
 // =============================================
 const PROVIDERS = {
     github: {
@@ -63,55 +67,68 @@ const PROVIDERS = {
     }
 };
 
-const SYSTEM_PROMPT = `ä½ æ˜¯ä¸€ä¸ªèªæ˜ã€å¯é ã€ä¹äºåŠ©äººçš„ä¸­æ–‡ AI åŠ©æ‰‹ï¼Œåå­—å«ã€ŒAIæ™ºèƒ½åŠ©æ‰‹ã€ã€‚
-å›ç­”å‡†ç¡®ã€æœ‰æ¡ç†ï¼Œé»˜è®¤ä½¿ç”¨ä¸­æ–‡ã€‚å¤æ‚é—®é¢˜ç”¨åˆ†ç‚¹ã€è¡¨æ ¼æˆ–ä»£ç å—å‘ˆç°ã€‚è¯­æ°”å‹å¥½è‡ªç„¶ã€‚`;
+const SYSTEM_PROMPT = `ÄãÊÇÒ»¸ö´ÏÃ÷¡¢¿É¿¿¡¢ÀÖÓÚÖúÈËµÄÖĞÎÄ AI ÖúÊÖ£¬Ãû×Ö½Ğ¡¸AIÖÇÄÜÖúÊÖ¡¹¡£
+»Ø´ğ×¼È·¡¢ÓĞÌõÀí£¬Ä¬ÈÏÊ¹ÓÃÖĞÎÄ¡£¸´ÔÓÎÊÌâÓÃ·Öµã¡¢±í¸ñ»ò´úÂë¿é³ÊÏÖ¡£ÓïÆøÓÑºÃ×ÔÈ»¡£`;
+
+// ·şÎñ¶ËÔ¤ÖÃ GitHub Token£¨½ö±¾µØ/×ÔÍĞ¹Üºó¶Ë¿ÉÓÃ£¬¾ø²»·¢Íùä¯ÀÀÆ÷£©
+function getDefaultGitHubToken() {
+    if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
+    try {
+        const t = execSync('gh auth token 2>/dev/null', { timeout: 3000, encoding: 'utf8' }).trim();
+        return t || '';
+    } catch (e) { return ''; }
+}
 
 // =============================================
-// å¥åº·æ£€æŸ¥
+// ½¡¿µ¼ì²é
 // =============================================
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString(), providers: Object.keys(PROVIDERS) });
 });
 
 // =============================================
-// è·å–æ¨èé…ç½®ï¼ˆé¢„å¡« GitHub Tokenï¼‰
+// »ñÈ¡ÍÆ¼öÅäÖÃ£¨Ö»¸æÖªÇ°¶Ëºó¶ËÊÇ·ñ¿ÉÓÃ£¬¾ø²»·µ»Ø Token£©
 // =============================================
 app.get('/api/config', (req, res) => {
-    let defaultToken = process.env.GITHUB_TOKEN || '';
-    if (!defaultToken) {
-        try {
-            const { execSync } = require('child_process');
-            defaultToken = execSync('gh auth token 2>/dev/null', { timeout: 3000, encoding: 'utf8' }).trim();
-        } catch (e) { /* gh ä¸å¯ç”¨æˆ–æœªç™»å½• */ }
-    }
+    const hasToken = !!getDefaultGitHubToken();
     res.json({
+        backend: hasToken,
         provider: 'github',
         model: 'gpt-4.1',
-        apiKey: defaultToken,
-        hint: 'å·²é¢„é…ç½® GitHub Modelsï¼Œé»˜è®¤ä½¿ç”¨æœ€æ–°çš„ GPT-4.1 æ¨¡å‹'
+        hint: hasToken
+            ? 'ÒÑÆôÓÃ·şÎñ¶Ë GitHub Models ´úÀí£¬Ê¹ÓÃÄãµÄ GitHub ÕËºÅÃâµÇÂ¼¶Ô»°'
+            : 'Î´¼ì²âµ½·şÎñ¶Ë GitHub Token£¬½«»ØÍËµ½ Puter Ãâ·ÑÍ¨µÀ'
     });
 });
 
 // =============================================
-// èŠå¤©æ¥å£ï¼ˆæ ¸å¿ƒï¼‰ï¼šæ”¯æŒ SSE æµå¼ (stream:true)
+// ÁÄÌì½Ó¿Ú£¨ºËĞÄ£©£ºÖ§³Ö SSE Á÷Ê½ (stream:true)
 // =============================================
 app.post('/api/chat', async (req, res) => {
     try {
-        const { message, history = [], apiKey, provider = 'groq', model, stream = false } = req.body;
+        let { message, history = [], apiKey, provider = 'groq', model, stream = false } = req.body;
 
         if (!message || !message.trim()) {
-            return res.status(400).json({ error: 'æ¶ˆæ¯ä¸èƒ½ä¸ºç©º' });
+            return res.status(400).json({ error: 'ÏûÏ¢²»ÄÜÎª¿Õ' });
         }
         if (!apiKey) {
-            return res.status(400).json({ error: 'è¯·å…ˆé…ç½® API Key', hint: 'è¿™æ˜¯å…è´¹æœåŠ¡ï¼Œæ— éœ€ä¿¡ç”¨å¡ï¼Œè¯¦è§è®¾ç½®é¢æ¿' });
+            // Î´´« key Ê±£¬³¢ÊÔÓÃ·şÎñ¶ËÔ¤ÖÃµÄ GitHub Token£¨gh auth token / GITHUB_TOKEN£©
+            // ÕâÑù±¾µØ»ò×ÔÍĞ¹Üºó¶Ë¿É¡°ÁãµÇÂ¼¡±Ö±½ÓÓÃÄãµÄ GitHub ÕËºÅÇı¶¯¶Ô»°
+            const defaultToken = getDefaultGitHubToken();
+            if (defaultToken) {
+                apiKey = defaultToken;
+                provider = 'github';
+            } else {
+                return res.status(400).json({ error: 'ÇëÏÈÅäÖÃ API Key', hint: 'ÕâÊÇÃâ·Ñ·şÎñ£¬ÎŞĞèĞÅÓÃ¿¨£¬Ïê¼ûÉèÖÃÃæ°å' });
+            }
         }
 
         const providerConfig = PROVIDERS[provider];
         if (!providerConfig) {
-            return res.status(400).json({ error: `ä¸æ”¯æŒçš„æœåŠ¡å•†: ${provider}` });
+            return res.status(400).json({ error: `²»Ö§³ÖµÄ·şÎñÉÌ: ${provider}` });
         }
 
-        // æ„å»ºæ¶ˆæ¯
+        // ¹¹½¨ÏûÏ¢
         const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
         const recentHistory = (history || []).slice(-10);
         for (const msg of recentHistory) {
@@ -141,21 +158,21 @@ app.post('/api/chat', async (req, res) => {
             });
             if (!upstream.ok) {
                 const err = await upstream.text();
-                return res.status(upstream.status).json({ error: `Gemini é”™è¯¯: ${upstream.status}` });
+                return res.status(upstream.status).json({ error: `Gemini ´íÎó: ${upstream.status}` });
             }
             const data = await upstream.json();
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'æŠ±æ­‰ï¼Œæˆ‘æ²¡æœ‰ç†è§£ä½ çš„é—®é¢˜ã€‚';
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '±§Ç¸£¬ÎÒÃ»ÓĞÀí½âÄãµÄÎÊÌâ¡£';
             if (stream) {
                 return streamText(res, reply, selectedModel, providerConfig.name);
             }
             return res.json({ reply, model: 'gemini-2.0-flash', provider: 'Google Gemini' });
         }
 
-        // ---------- OpenAI å…¼å®¹ï¼šGitHub / Groq / OpenRouter / ChatAnywhere ----------
+        // ---------- OpenAI ¼æÈİ£ºGitHub / Groq / OpenRouter / ChatAnywhere ----------
         const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
         if (provider === 'openrouter') {
             headers['HTTP-Referer'] = 'https://ai-tools.local';
-            headers['X-Title'] = 'AIæ™ºèƒ½å·¥å…·ç®±';
+            headers['X-Title'] = 'AIÖÇÄÜ¹¤¾ßÏä';
         }
 
         const requestBody = {
@@ -178,23 +195,23 @@ app.post('/api/chat', async (req, res) => {
 
         if (!upstream.ok) {
             const errText = await upstream.text();
-            console.error(`[${provider}] é”™è¯¯ ${upstream.status}:`, errText.slice(0, 300));
-            if (upstream.status === 401) return res.status(401).json({ error: 'API Key æ— æ•ˆï¼Œè¯·æ£€æŸ¥åé‡è¯•', hint: `å‰å¾€ ${providerConfig.docs} è·å–æœ‰æ•ˆ Key` });
-            if (upstream.status === 403) return res.status(403).json({ error: 'æƒé™ä¸è¶³ï¼Œå¯èƒ½ API Key æœªå¯ç”¨è®¿é—®è¯¥æ¨¡å‹çš„æƒé™', hint: provider === 'github' ? 'è¯·åˆ° https://github.com/marketplace/models ç”³è¯·å¯¹åº”æ¨¡å‹çš„è®¿é—®æƒé™' : `è¯·æ£€æŸ¥ ${providerConfig.docs} ä¸Šçš„ Key è®¾ç½®` });
-            if (upstream.status === 429) return res.status(429).json({ error: 'è¯·æ±‚è¿‡äºé¢‘ç¹ï¼Œè¯·ç¨åé‡è¯•ï¼ˆå…è´¹ API æœ‰é¢‘ç‡é™åˆ¶ï¼‰' });
-            if (upstream.status === 404 && provider === 'github') return res.status(404).json({ error: `æ¨¡å‹ ${selectedModel} ä¸å­˜åœ¨æˆ–æš‚æœªå¯¹ä½ å¼€æ”¾`, hint: 'è¯·åˆ° GitHub Models å¸‚åœºç¡®è®¤å¯ç”¨æ¨¡å‹åˆ—è¡¨' });
-            return res.status(upstream.status).json({ error: `API è¯·æ±‚å¤±è´¥: ${upstream.status}` });
+            console.error(`[${provider}] ´íÎó ${upstream.status}:`, errText.slice(0, 300));
+            if (upstream.status === 401) return res.status(401).json({ error: 'API Key ÎŞĞ§£¬Çë¼ì²éºóÖØÊÔ', hint: `Ç°Íù ${providerConfig.docs} »ñÈ¡ÓĞĞ§ Key` });
+            if (upstream.status === 403) return res.status(403).json({ error: 'È¨ÏŞ²»×ã£¬¿ÉÄÜ API Key Î´ÆôÓÃ·ÃÎÊ¸ÃÄ£ĞÍµÄÈ¨ÏŞ', hint: provider === 'github' ? 'Çëµ½ https://github.com/marketplace/models ÉêÇë¶ÔÓ¦Ä£ĞÍµÄ·ÃÎÊÈ¨ÏŞ' : `Çë¼ì²é ${providerConfig.docs} ÉÏµÄ Key ÉèÖÃ` });
+            if (upstream.status === 429) return res.status(429).json({ error: 'ÇëÇó¹ıÓÚÆµ·±£¬ÇëÉÔºóÖØÊÔ£¨Ãâ·Ñ API ÓĞÆµÂÊÏŞÖÆ£©' });
+            if (upstream.status === 404 && provider === 'github') return res.status(404).json({ error: `Ä£ĞÍ ${selectedModel} ²»´æÔÚ»òÔİÎ´¶ÔÄã¿ª·Å`, hint: 'Çëµ½ GitHub Models ÊĞ³¡È·ÈÏ¿ÉÓÃÄ£ĞÍÁĞ±í' });
+            return res.status(upstream.status).json({ error: `API ÇëÇóÊ§°Ü: ${upstream.status}` });
         }
 
-        // æ¨ç†æ¨¡å‹ä¸æ”¯æŒæµå¼ â†’ ç›´æ¥è¿”å›
+        // ÍÆÀíÄ£ĞÍ²»Ö§³ÖÁ÷Ê½ ¡ú Ö±½Ó·µ»Ø
         if (isReasoningModel || !stream) {
             const data = await upstream.json();
-            const reply = data.choices?.[0]?.message?.content || 'æŠ±æ­‰ï¼Œæˆ‘æ²¡æœ‰ç†è§£ä½ çš„é—®é¢˜ã€‚';
+            const reply = data.choices?.[0]?.message?.content || '±§Ç¸£¬ÎÒÃ»ÓĞÀí½âÄãµÄÎÊÌâ¡£';
             if (stream) return streamText(res, reply, selectedModel, providerConfig.name);
             return res.json({ reply, model: data.model || selectedModel, provider: providerConfig.name });
         }
 
-        // SSE æµå¼è½¬å‘
+        // SSE Á÷Ê½×ª·¢
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache, no-transform',
@@ -225,24 +242,24 @@ app.post('/api/chat', async (req, res) => {
                         const obj = JSON.parse(payload);
                         const token = obj.choices?.[0]?.delta?.content;
                         if (token) send({ token });
-                    } catch (e) { /* å¿½ç•¥éJSONè¡Œ */ }
+                    } catch (e) { /* ºöÂÔ·ÇJSONĞĞ */ }
                 }
             }
         } catch (e) {
-            send({ error: 'æµå¼ä¼ è¾“ä¸­æ–­' });
+            send({ error: 'Á÷Ê½´«ÊäÖĞ¶Ï' });
         } finally {
             send({ token: '' });
             res.write('data: [DONE]\n\n');
             res.end();
         }
     } catch (err) {
-        console.error('[Server] é”™è¯¯:', err.message);
-        if (!res.headersSent) return res.status(500).json({ error: 'æœåŠ¡å™¨å†…éƒ¨é”™è¯¯ï¼Œè¯·ç¨åé‡è¯•' });
+        console.error('[Server] ´íÎó:', err.message);
+        if (!res.headersSent) return res.status(500).json({ error: '·şÎñÆ÷ÄÚ²¿´íÎó£¬ÇëÉÔºóÖØÊÔ' });
         try { res.end(); } catch (e) {}
     }
 });
 
-// å°†æ•´æ®µæ–‡æœ¬ä½œä¸ºå• token æµæ¨é€ï¼ˆç”¨äºä¸æ”¯æŒæµå¼çš„æ¨¡å‹/æœåŠ¡å•†ï¼‰
+// ½«Õû¶ÎÎÄ±¾×÷Îªµ¥ token Á÷ÍÆËÍ£¨ÓÃÓÚ²»Ö§³ÖÁ÷Ê½µÄÄ£ĞÍ/·şÎñÉÌ£©
 function streamText(res, text, model, provider) {
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -250,7 +267,7 @@ function streamText(res, text, model, provider) {
         'Connection': 'keep-alive'
     });
     res.flushHeaders && res.flushHeaders();
-    // åˆ†å—æ¨é€ï¼Œæ¨¡æ‹Ÿæµå¼
+    // ·Ö¿éÍÆËÍ£¬Ä£ÄâÁ÷Ê½
     const chunkSize = 12;
     for (let i = 0; i < text.length; i += chunkSize) {
         res.write(`data: ${JSON.stringify({ token: text.slice(i, i + chunkSize) })}\n\n`);
@@ -260,20 +277,20 @@ function streamText(res, text, model, provider) {
 }
 
 // =============================================
-// SPA fallbackï¼šé API è·¯å¾„è¿”å› index.html
+// SPA fallback£º·Ç API Â·¾¶·µ»Ø index.html
 // =============================================
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API ç«¯ç‚¹ä¸å­˜åœ¨' });
+        return res.status(404).json({ error: 'API ¶Ëµã²»´æÔÚ' });
     }
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // =============================================
-// å¯åŠ¨
+// Æô¶¯
 // =============================================
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`? AIå·¥å…·ç®±æœåŠ¡å¯åŠ¨æˆåŠŸ`);
+    console.log('AI¹¤¾ßÏä·şÎñÆô¶¯³É¹¦');
     console.log(`   http://0.0.0.0:${PORT}`);
-    console.log(`   æ”¯æŒ: ${Object.keys(PROVIDERS).join(', ')}`);
+    console.log(`   Ö§³Ö: ${Object.keys(PROVIDERS).join(', ')}`);
 });

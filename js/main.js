@@ -126,6 +126,16 @@ function buildSystemPrompt() {
 let apiConfig = loadConfig();
 let chatSettings = loadChatSettings();
 
+// 自托管后端是否可用（服务端已预置 GitHub Token，可零登录）
+// 为 true 时，前端完全不持有任何 Token，所有鉴权在服务端完成
+let backendAuto = false;
+let backendModel = 'gpt-4.1';
+// 后端基址：'' 表示同源（隧道/自托管场景）；否则为回退后端的绝对地址
+let backendBase = '';
+// 回退后端地址：当本站为纯静态托管（如 GitHub Pages）且同源无后端时，
+// 尝试连接此隧道后端，实现“永久地址 + 零登录”。隧道重启后需同步更新此值。
+const FALLBACK_BACKEND = 'https://mtv-peace-size-hepatitis.trycloudflare.com';
+
 let conversations = loadConversations();   // [{id,title,messages:[{role,content}]}]
 let activeId = conversations.length ? conversations[0].id : null;
 
@@ -539,21 +549,23 @@ async function streamPuter(messages, model, onToken) {
 
 // --- 后端代理 SSE 流式（自托管可用） ---
 async function streamProxy(message, history, onToken) {
-    if (!apiConfig.apiKey) {
+    // 后端自动模式（服务端预置 GitHub Token）无需前端提供 Key
+    if (!backendAuto && !apiConfig.apiKey) {
         throw new Error('请先在右上角「钥匙」里配置 API Key（自定义 API 需要自托管后端）');
     }
     abortCtrl = new AbortController();
-    const res = await fetch('/api/chat', {
+    const res = await fetch(`${backendBase}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: abortCtrl.signal,
         body: JSON.stringify({
             message,
             history,
-            apiKey: apiConfig.apiKey,
             provider: apiConfig.provider,
-            model: apiConfig.model,
-            stream: true
+            model: backendAuto ? backendModel : apiConfig.model,
+            stream: true,
+            // 安全：绝不把服务端 Token 发给后端；零登录时后端自行注入
+            ...(apiConfig.apiKey ? { apiKey: apiConfig.apiKey } : {})
         })
     });
     if (!res.ok) {
@@ -979,15 +991,34 @@ function init() {
     renderActiveConversation();
     sendBtn.disabled = !chatInput.value.trim();
 
-    // 尝试从后端获取预配置（自托管时有效）
-    fetch(`/api/config`).then(r => r.json()).then(config => {
-        if (config.apiKey && !apiConfig.apiKey) {
-            apiConfig = { provider: config.provider || 'github', model: config.model || 'gpt-4.1', apiKey: config.apiKey };
-            saveConfig();
-            updateApiSettingsBtn();
-            apiKeyInput.value = config.apiKey;
+    // 尝试从后端获取预配置（自托管 / 隧道场景有效）
+    // 服务端若预置了 GitHub Token，则自动走“你的 GitHub 账号”通道，实现零登录
+    // 注意：后端绝不会把 Token 返回给浏览器，前端仅拿到一个 backend:true 标志
+    // 探测顺序：同源后端 → 回退隧道后端（让纯静态托管的永久地址也能零登录）
+    const candidates = [''];
+    if (location.hostname.endsWith('github.io') || location.protocol === 'file:') {
+        candidates.push(FALLBACK_BACKEND);
+    }
+    (async () => {
+        for (const base of candidates) {
+            try {
+                const r = await fetch(`${base}/api/config`);
+                if (!r.ok) continue;
+                const config = await r.json();
+                if (config.backend && !apiConfig.apiKey) {
+                    backendAuto = true;
+                    backendBase = base;
+                    apiConfig.provider = config.provider || 'github';
+                    backendModel = config.model || 'gpt-4.1';
+                    chatSettings.model = '__custom__';
+                    saveChatSettings();
+                    updateApiSettingsBtn();
+                    syncModelSelector();
+                    break;
+                }
+            } catch (e) { /* 该候选不可用，尝试下一个 */ }
         }
-    }).catch(() => {});
+    })();
 
     // 数字动画
     const heroObserver = new IntersectionObserver((entries) => {
