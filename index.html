@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Markdown 渲染 + 代码高亮 (ChatGPT 式) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
 
@@ -119,62 +123,80 @@
         </div>
     </section>
 
-    <!-- ====== AI 对话区域 ====== -->
+    <!-- ====== AI 对话区域 (ChatGPT 风格) ====== -->
     <section class="section chat-section" id="chat">
         <div class="container">
             <div class="section-header">
                 <span class="section-badge"><i class="fas fa-comment-dots"></i> AI对话</span>
                 <h2 class="section-title">与AI智能<b>对话</b></h2>
-                <p class="section-desc">无论是技术问题、创意构思，还是日常闲聊，AI助手都能为你提供帮助</p>
+                <p class="section-desc">基于 Puter.js 免费直连主流大模型，支持流式输出、Markdown 渲染与多轮对话</p>
             </div>
-            <div class="chat-container">
-                <div class="chat-header">
-                    <div class="chat-status">
-                        <div class="status-dot online"></div>
-                        <span>AI 智能助手 在线</span>
-                    </div>
-                    <div class="chat-header-actions">
-                        <button class="api-settings-btn" id="apiSettingsBtn" title="API配置">
-                            <i class="fas fa-key"></i>
+
+            <div class="chat-app" id="chatApp">
+                <!-- 侧边栏：对话历史 -->
+                <aside class="chat-sidebar" id="chatSidebar">
+                    <div class="sidebar-top">
+                        <button class="new-chat-btn" id="newChatBtn">
+                            <i class="fas fa-plus"></i> 新对话
                         </button>
-                        <button class="chat-action-btn" id="clearChat" title="清空对话">
-                            <i class="fas fa-trash-alt"></i>
+                        <button class="sidebar-toggle" id="sidebarToggle" title="收起/展开侧边栏">
+                            <i class="fas fa-chevron-left"></i>
                         </button>
                     </div>
-                </div>
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message message-ai">
-                        <div class="message-avatar">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="message-content">
-                            <div class="message-bubble">
-                                <p>你好！👋 我是AI智能助手，有什么可以帮助你的吗？</p>
-                                <p>你可以问我任何问题，比如：</p>
-                                <ul>
-                                    <li>"帮我写一封邮件"</li>
-                                    <li>"解释一下量子计算"</li>
-                                    <li>"给个健身计划"</li>
-                                </ul>
+                    <div class="conversation-list" id="conversationList">
+                        <div class="conv-empty">暂无对话历史<br>点击「新对话」开始</div>
+                    </div>
+                    <div class="sidebar-footer">
+                        当前模型：<b id="sidebarModelName">GPT-5.5</b><br>
+                        由 Puter.js 免费提供
+                    </div>
+                </aside>
+
+                <!-- 主聊天区 -->
+                <div class="chat-main">
+                    <div class="chat-header">
+                        <div class="chat-header-left">
+                            <button class="mobile-chat-menu" id="mobileChatMenu" title="对话列表">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <div class="model-selector" id="modelSelector">
+                                <button class="model-selector-btn" id="modelSelectorBtn">
+                                    <span id="currentModelName">GPT-5.5</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                    <span class="model-badge" id="currentModelBadge">免费</span>
+                                </button>
+                                <div class="model-dropdown" id="modelDropdown"><!-- JS 动态生成 --></div>
                             </div>
-                            <span class="message-time">刚刚</span>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button class="api-settings-btn" id="apiSettingsBtn" title="高级 / 自定义API">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button class="chat-action-btn" id="clearChat" title="清空当前对话">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
                     </div>
-                </div>
-                <div class="chat-input-area">
-                    <div class="suggestions" id="suggestions">
-                        <button class="suggestion-chip" data-prompt="帮我写一篇关于AI的短文">✍️ 写短文</button>
-                        <button class="suggestion-chip" data-prompt="给我推荐3本好书">📚 书单推荐</button>
-                        <button class="suggestion-chip" data-prompt="怎么学习编程？">💻 学编程</button>
-                        <button class="suggestion-chip" data-prompt="制定一周健身计划">🏋️ 健身计划</button>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- 空状态由 JS 注入；对话消息也由 JS 渲染 -->
                     </div>
-                    <div class="input-wrapper">
-                        <textarea class="chat-input" id="chatInput" placeholder="输入你的问题..." rows="1"></textarea>
-                        <button class="send-btn" id="sendBtn">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+
+                    <div class="chat-input-area">
+                        <div class="suggestions" id="suggestions">
+                            <button class="suggestion-chip" data-prompt="帮我写一篇关于AI的短文">✍️ 写短文</button>
+                            <button class="suggestion-chip" data-prompt="给我推荐3本好书">📚 书单推荐</button>
+                            <button class="suggestion-chip" data-prompt="用Python写一个快速排序并解释">💻 写代码</button>
+                            <button class="suggestion-chip" data-prompt="制定一周健身计划">🏋️ 健身计划</button>
+                        </div>
+                        <div class="input-wrapper">
+                            <textarea class="chat-input" id="chatInput" placeholder="给 AI 发送消息..." rows="1"></textarea>
+                            <button class="send-btn" id="sendBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <p class="chat-footer-note">AI 回复仅供参考，请验证重要信息 · 支持 Markdown 与代码高亮</p>
                     </div>
-                    <p class="chat-footer-note">AI回复仅供参考，请验证重要信息</p>
                 </div>
             </div>
         </div>
