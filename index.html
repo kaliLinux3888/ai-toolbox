@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI智能工具箱 - 集AI对话、文案生成、图片分析于一体的智能平台">
+    <title>AI智能工具箱 | 你的智能助手</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <!-- ====== 导航栏 ====== -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <span class="logo-text">AI<span class="logo-accent">智能</span>工具箱</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#hero" class="active">首页</a></li>
+                <li><a href="#chat">AI对话</a></li>
+                <li><a href="#tools">AI工具</a></li>
+                <li><a href="#features">功能特点</a></li>
+                <li><a href="#contact">联系我们</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ====== Hero 区域 ====== -->
+    <section class="hero" id="hero">
+        <div class="hero-bg">
+            <div class="gradient-sphere sphere-1"></div>
+            <div class="gradient-sphere sphere-2"></div>
+            <div class="gradient-sphere sphere-3"></div>
+        </div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <div class="hero-badge">
+                    <i class="fas fa-sparkles"></i>
+                    <span>新一代AI智能平台</span>
+                </div>
+                <h1 class="hero-title">
+                    让AI <span class="gradient-text">赋能</span><br>你的每一个想法
+                </h1>
+                <p class="hero-desc">
+                    集AI对话、文案生成、智能分析于一体的全能工具平台。
+                    无需注册，即刻体验AI的无限可能。
+                </p>
+                <div class="hero-actions">
+                    <a href="#chat" class="btn btn-primary">
+                        <i class="fas fa-robot"></i>
+                        开始AI对话
+                    </a>
+                    <a href="#tools" class="btn btn-outline">
+                        <i class="fas fa-tools"></i>
+                        探索工具
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="50">0</span><span class="stat-plus">+</span>
+                        <span class="stat-label">AI工具</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="10">0</span><span class="stat-plus">K+</span>
+                        <span class="stat-label">活跃用户</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="99.9">0</span><span class="stat-plus">%</span>
+                        <span class="stat-label">在线率</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-illustration">
+                    <div class="ai-orb">
+                        <div class="orb-core"></div>
+                        <div class="orb-ring ring-1"></div>
+                        <div class="orb-ring ring-2"></div>
+                        <div class="orb-ring ring-3"></div>
+                        <div class="orb-particle p1"></div>
+                        <div class="orb-particle p2"></div>
+                        <div class="orb-particle p3"></div>
+                        <div class="orb-particle p4"></div>
+                        <div class="orb-particle p5"></div>
+                    </div>
+                    <div class="float-card card-1">
+                        <i class="fas fa-comment-dots"></i>
+                        <span>智能对话</span>
+                    </div>
+                    <div class="float-card card-2">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>文案生成</span>
+                    </div>
+                    <div class="float-card card-3">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>数据分析</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                <path d="M0,60 C360,120 720,0 1440,60 L1440,120 L0,120 Z" fill="var(--bg-primary)"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- ====== AI 对话区域 ====== -->
+    <section class="section chat-section" id="chat">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge"><i class="fas fa-comment-dots"></i> AI对话</span>
+                <h2 class="section-title">与AI智能<b>对话</b></h2>
+                <p class="section-desc">无论是技术问题、创意构思，还是日常闲聊，AI助手都能为你提供帮助</p>
+            </div>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-status">
+                        <div class="status-dot online"></div>
+                        <span>AI 智能助手 在线</span>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button class="api-settings-btn" id="apiSettingsBtn" title="API配置">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="chat-action-btn" id="clearChat" title="清空对话">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message message-ai">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-bubble">
+                                <p>你好！👋 我是AI智能助手，有什么可以帮助你的吗？</p>
+                                <p>你可以问我任何问题，比如：</p>
+                                <ul>
+                                    <li>"帮我写一封邮件"</li>
+                                    <li>"解释一下量子计算"</li>
+                                    <li>"给个健身计划"</li>
+                                </ul>
+                            </div>
+                            <span class="message-time">刚刚</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="suggestions" id="suggestions">
+                        <button class="suggestion-chip" data-prompt="帮我写一篇关于AI的短文">✍️ 写短文</button>
+                        <button class="suggestion-chip" data-prompt="给我推荐3本好书">📚 书单推荐</button>
+                        <button class="suggestion-chip" data-prompt="怎么学习编程？">💻 学编程</button>
+                        <button class="suggestion-chip" data-prompt="制定一周健身计划">🏋️ 健身计划</button>
+                    </div>
+                    <div class="input-wrapper">
+                        <textarea class="chat-input" id="chatInput" placeholder="输入你的问题..." rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <p class="chat-footer-note">AI回复仅供参考，请验证重要信息</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== AI 工具集 ====== -->
+    <section class="section tools-section" id="tools">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge"><i class="fas fa-tools"></i> 智能工具</span>
+                <h2 class="section-title">强大的AI<b>工具集</b></h2>
+                <p class="section-desc">覆盖文案、分析、翻译等多个场景，提升你的工作效率</p>
+            </div>
+            <div class="tools-grid" id="toolsGrid">
+                <!-- 工具卡片 1 -->
+                <div class="tool-card" data-tool="writer">
+                    <div class="tool-card-icon" style="--icon-color: #6366f1;">
+                        <i class="fas fa-pen-fancy"></i>
+                    </div>
+                    <h3 class="tool-card-title">AI 写作助手</h3>
+                    <p class="tool-card-desc">智能生成文章、邮件、文案等多种文本内容</p>
+                    <button class="tool-card-btn">立即使用 <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <!-- 工具卡片 2 -->
+                <div class="tool-card" data-tool="translate">
+                    <div class="tool-card-icon" style="--icon-color: #06b6d4;">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3 class="tool-card-title">智能翻译</h3>
+                    <p class="tool-card-desc">支持多语种互译，保留语境和情感的专业翻译</p>
+                    <button class="tool-card-btn">立即使用 <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <!-- 工具卡片 3 -->
+                <div class="tool-card" data-tool="summary">
+                    <div class="tool-card-icon" style="--icon-color: #f59e0b;">
+                        <i class="fas fa-compress-arrows-alt"></i>
+                    </div>
+                    <h3 class="tool-card-title">文章总结</h3>
+                    <p class="tool-card-desc">快速提取长文核心要点，节省阅读时间</p>
+                    <button class="tool-card-btn">立即使用 <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <!-- 工具卡片 4 -->
+                <div class="tool-card" data-tool="code">
+                    <div class="tool-card-icon" style="--icon-color: #10b981;">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3 class="tool-card-title">代码助手</h3>
+                    <p class="tool-card-desc">代码生成、调试、优化，支持多种编程语言</p>
+                    <button class="tool-card-btn">立即使用 <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <!-- 工具卡片 5 -->
+                <div class="tool-card" data-tool="idea">
+                    <div class="tool-card-icon" style="--icon-color: #ec4899;">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3 class="tool-card-title">创意生成器</h3>
+                    <p class="tool-card-desc">头脑风暴、创意点子、营销方案一键生成</p>
+                    <button class="tool-card-btn">立即使用 <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <!-- 工具卡片 6 -->
+                <div class="tool-card" data-tool="analysis">
+                    <div class="tool-card-icon" style="--icon-color: #8b5cf6;">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3 class="tool-card-title">数据分析</h3>
+                    <p class="tool-card-desc">用自然语言分析数据，发现隐藏的趋势和洞察</p>
+                    <button class="tool-card-btn">立即使用 <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== 功能特点 ====== -->
+    <section class="section features-section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge"><i class="fas fa-star"></i> 功能特点</span>
+                <h2 class="section-title">为什么选择<b>我们</b></h2>
+                <p class="section-desc">领先的AI技术，极致的用户体验</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon" style="--f-color: #6366f1;">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>极速响应</h3>
+                    <p>毫秒级响应速度，流畅的对话体验，不浪费你的每一秒</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="--f-color: #06b6d4;">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>安全可靠</h3>
+                    <p>数据加密传输，隐私安全保护，对话内容严格保密</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="--f-color: #10b981;">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <h3>无限创意</h3>
+                    <p>强大的生成能力，从文案到代码，释放你的创造力</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="--f-color: #f59e0b;">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>多端适配</h3>
+                    <p>PC、平板、手机全平台支持，随时随地使用</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="--f-color: #ec4899;">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>深度学习</h3>
+                    <p>基于最新大语言模型，理解更准确，回答更智能</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="--f-color: #8b5cf6;">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3>持续进化</h3>
+                    <p>模型持续更新，功能不断迭代，越用越智能</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== CTA ====== -->
+    <section class="section cta-section">
+        <div class="container">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h2>准备好体验AI的力量了吗？</h2>
+                    <p>立即开始使用，探索AI的无限可能</p>
+                    <a href="#chat" class="btn btn-primary btn-lg">
+                        <i class="fas fa-rocket"></i>
+                        立即体验
+                    </a>
+                </div>
+                <div class="cta-decoration">
+                    <div class="cta-orb"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== 页脚 ====== -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <span class="logo-text">AI<span class="logo-accent">智能</span>工具箱</span>
+                    </div>
+                    <p>让AI赋能每一个想法，智能工具助你事半功倍。</p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="微信"><i class="fab fa-weixin"></i></a>
+                        <a href="#" aria-label="邮箱"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>功能介绍</h4>
+                    <ul>
+                        <li><a href="#chat">AI对话</a></li>
+                        <li><a href="#tools">文案生成</a></li>
+                        <li><a href="#tools">智能翻译</a></li>
+                        <li><a href="#tools">代码助手</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>关于我们</h4>
+                    <ul>
+                        <li><a href="#">公司介绍</a></li>
+                        <li><a href="#">技术博客</a></li>
+                        <li><a href="#">用户协议</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>联系方式</h4>
+                    <ul>
+                        <li><a href="mailto:hello@ai-tools.com"><i class="fas fa-envelope"></i> hello@ai-tools.com</a></li>
+                        <li><a href="#"><i class="fas fa-map-marker-alt"></i> 中国·北京</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 AI智能工具箱. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ====== 回到顶部 ====== -->
+    <button class="back-to-top" id="backToTop" aria-label="回到顶部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- ====== API 配置面板 ====== -->
+    <div class="api-config-overlay" id="apiConfigOverlay">
+        <div class="api-config-panel">
+            <div class="api-config-header">
+                <h3><i class="fas fa-key"></i> API 配置</h3>
+                <button class="api-config-close" id="apiConfigClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="api-config-body">
+                <div class="config-section">
+                    <label class="config-label">选择服务商</label>
+                    <select class="config-select" id="providerSelect">
+                        <option value="github">GitHub Models (免费GPT-4.1 · 已自动配置)</option>
+                        <option value="chatanywhere">ChatAnywhere (GPT-5.6/GPT-5.5 · 价最低)</option>
+                        <option value="openrouter">OpenRouter (GPT-5.5 Pro · $5起)</option>
+                        <option value="groq">Groq (免费 · 极速)</option>
+                        <option value="gemini">Google Gemini (免费)</option>
+                    </select>
+                </div>
+
+                <div class="config-section">
+                    <label class="config-label">选择模型</label>
+                    <select class="config-select" id="modelSelect">
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B (推荐)</option>
+                        <option value="llama-3.1-8b-instant">Llama 3.1 8B (快速)</option>
+                        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                    </select>
+                </div>
+
+                <div class="config-section">
+                    <label class="config-label">API Key</label>
+                    <input type="password" class="config-input" id="apiKeyInput" placeholder="输入你的 API Key...">
+                    <div id="apiStatus"></div>
+                    <div class="config-hint" id="configHint">
+                        🔑 免费获取API Key（无需信用卡）：<br>
+                        • <a href="https://console.groq.com/keys" target="_blank">Groq 免费申请</a> — 30次/分钟，注册即用<br>
+                        • <a href="https://openrouter.ai/keys" target="_blank">OpenRouter 免费申请</a> — 支持多种免费模型<br>
+                        • <a href="https://aistudio.google.com/apikey" target="_blank">Google Gemini 免费申请</a> — 每天1500次请求
+                    </div>
+                </div>
+
+                <div class="config-actions">
+                    <button class="btn btn-outline" id="testConnectionBtn">
+                        <i class="fas fa-plug"></i> 测试连接
+                    </button>
+                    <button class="btn btn-save" id="saveConfigBtn">
+                        <i class="fas fa-check"></i> 保存配置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 工具弹窗 ====== -->
+    <div class="modal-overlay" id="toolModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">工具名称</h3>
+                <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-tool-content" id="modalContent">
+                    <div class="modal-input-group">
+                        <label id="modalInputLabel">输入内容</label>
+                        <textarea id="modalInput" rows="5" placeholder="请输入..."></textarea>
+                    </div>
+                    <button class="btn btn-primary btn-submit" id="modalSubmit">
+                        <i class="fas fa-magic"></i> 开始生成
+                    </button>
+                    <div class="modal-result" id="modalResult" style="display:none;">
+                        <label>生成结果</label>
+                        <div class="result-content" id="modalResultContent"></div>
+                        <button class="btn btn-outline btn-copy" id="copyResult">
+                            <i class="fas fa-copy"></i> 复制结果
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

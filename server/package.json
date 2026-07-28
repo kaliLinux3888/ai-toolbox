@@ -1,0 +1,13 @@
+{
+  "name": "ai-tools-server",
+  "version": "1.0.0",
+  "description": "AI智能工具箱 - 后端API代理服务",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
