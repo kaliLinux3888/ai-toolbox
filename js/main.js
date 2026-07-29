@@ -134,7 +134,7 @@ let backendModel = 'gpt-4.1';
 let backendBase = '';
 // 回退后端地址：当本站为纯静态托管（如 GitHub Pages）且同源无后端时，
 // 尝试连接此隧道后端，实现“永久地址 + 零登录”。隧道重启后需同步更新此值。
-const FALLBACK_BACKEND = 'https://mtv-peace-size-hepatitis.trycloudflare.com';
+const FALLBACK_BACKEND = 'https://obvious-suse-russell-refresh.trycloudflare.com';
 
 let conversations = loadConversations();   // [{id,title,messages:[{role,content}]}]
 let activeId = conversations.length ? conversations[0].id : null;
