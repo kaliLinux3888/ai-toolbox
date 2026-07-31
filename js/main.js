@@ -506,8 +506,11 @@ async function handleSendMessage() {
     } catch (err) {
         console.error('[chat] 错误:', err);
         const msg = err.message || '出错了，请稍后再试';
-        if (/auth|login|sign in|未登录|not authenticated|unauthenticated|restricted/i.test(msg)) {
-            // 需要登录：移除空气泡，改显示一键登录卡片
+        if (/auth|login|sign in|未登录|not authenticated|unauthenticated|restricted|401|unauthorized|token|API Key|无效|权限/i.test(msg)) {
+            // 需要登录 / GitHub Token 失效：自动切换到 Puter 模型，并弹出一键登录卡片（一次登录即用）
+            if (backendAuto) {
+                try { chatSettings.model = 'gpt-5.5'; saveChatSettings(); syncModelSelector(); } catch (e) {}
+            }
             if (bubble && bubble.wrapper && bubble.wrapper.parentNode) bubble.wrapper.remove();
             showAuthCard();
             return;

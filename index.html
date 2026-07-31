@@ -451,6 +451,44 @@
         </div>
     </div>
 
+    <!-- ====== 马维斯 语音助手 MAVIS ====== -->
+    <button class="mavis-fab" id="mavisFab" title="唤醒马维斯语音助手">
+        <i class="fas fa-microphone"></i>
+        <span class="mavis-fab-pulse"></span>
+    </button>
+
+    <div class="mavis-overlay" id="mavisOverlay">
+        <div class="mavis-panel">
+            <div class="mavis-header">
+                <div class="mavis-title"><i class="fas fa-robot"></i> 马维斯 <span class="mavis-ver">MAVIS</span></div>
+                <button class="mavis-close" id="mavisClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mavis-stage">
+                <div class="mavis-orb" id="mavisOrb">
+                    <div class="mavis-orb-core"></div>
+                    <div class="mavis-orb-ring"></div>
+                    <div class="mavis-orb-ring r2"></div>
+                    <div class="mavis-orb-ring r3"></div>
+                </div>
+                <div class="mavis-status" id="mavisStatus">点击麦克风，或直接说「马维斯」唤醒我</div>
+                <div class="mavis-transcript" id="mavisTranscript"></div>
+            </div>
+            <div class="mavis-camera" id="mavisCamera" style="display:none">
+                <video id="mavisVideo" autoplay playsinline muted></video>
+                <button class="mavis-capture" id="mavisCapture"><i class="fas fa-camera"></i> 看一眼</button>
+            </div>
+            <div class="mavis-controls">
+                <button class="mavis-mic" id="mavisMic" title="开始/停止聆听"><i class="fas fa-microphone"></i></button>
+                <button class="mavis-cam-btn" id="mavisCamBtn" title="开启摄像头（让马维斯看见你）"><i class="fas fa-video"></i></button>
+                <button class="mavis-stop-speak" id="mavisStopSpeak" title="停止朗读"><i class="fas fa-volume-mute"></i></button>
+            </div>
+            <div class="mavis-hints">
+                试试说：「马维斯，把模型换成 GPT-4」「清空对话」「总结一下我们的聊天」「看看我桌上有什么」
+            </div>
+            <input type="text" class="mavis-text-input" id="mavisTextInput" placeholder="也可以直接打字发给马维斯…" />
+        </div>
+    </div>
+
     <!-- ====== 工具弹窗 ====== -->
     <div class="modal-overlay" id="toolModal">
         <div class="modal-container">
@@ -481,5 +519,6 @@
 
     <script src="https://js.puter.com/v2/"></script>
     <script src="js/main.js"></script>
+    <script src="js/mavis.js"></script>
 </body>
 </html>

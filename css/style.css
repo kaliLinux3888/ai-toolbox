@@ -2282,3 +2282,110 @@ img { max-width: 100%; }
 }
 .auth-login-btn:hover { transform: translateY(-1px); }
 .auth-login-btn:disabled { opacity: .7; cursor: default; transform: none; }
+
+/* ============================================================
+ * 马维斯 MAVIS 语音助手
+ * ============================================================ */
+.mavis-fab {
+    position: fixed; right: 28px; bottom: 28px; z-index: 999;
+    width: 60px; height: 60px; border-radius: 50%;
+    border: none; cursor: pointer; color: #fff;
+    background: linear-gradient(135deg, #4f6ef7, #8b5cf6);
+    box-shadow: 0 10px 30px rgba(79,110,247,.45);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.mavis-fab:hover { transform: scale(1.08) rotate(-6deg); }
+.mavis-fab .mavis-fab-pulse {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid rgba(139,92,246,.6); animation: mavisPulse 2.2s ease-out infinite;
+}
+@keyframes mavisPulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.6); opacity: 0; } }
+
+.mavis-overlay {
+    position: fixed; inset: 0; z-index: 1000; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(10,12,28,.55); backdrop-filter: blur(6px);
+}
+.mavis-overlay.active { display: flex; animation: fadeIn .25s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.mavis-panel {
+    width: min(440px, 92vw); background: var(--bg-card, #fff);
+    border-radius: 24px; padding: 26px 24px 20px; position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,.35);
+    border: 1px solid rgba(139,92,246,.25);
+    animation: mavisRise .3s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes mavisRise { from { transform: translateY(24px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.mavis-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.mavis-title { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text, #1a1a2e); }
+.mavis-title i { color: #8b5cf6; }
+.mavis-ver { font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 2px 6px; border-radius: 6px;
+    background: linear-gradient(135deg,#4f6ef7,#8b5cf6); color: #fff; }
+.mavis-close { width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(0,0,0,.05); color: var(--text,#1a1a2e); font-size: 15px; transition: background .2s; }
+.mavis-close:hover { background: rgba(0,0,0,.12); }
+
+.mavis-stage { display: flex; flex-direction: column; align-items: center; padding: 8px 0 4px; }
+
+/* 语音球 */
+.mavis-orb { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.mavis-orb-core {
+    width: 78px; height: 78px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #a78bfa, #6d5dfc 60%, #4f6ef7);
+    box-shadow: 0 0 30px rgba(109,93,252,.6), inset 0 0 20px rgba(255,255,255,.25);
+    transition: transform .3s ease;
+}
+.mavis-orb-ring {
+    position: absolute; border-radius: 50%; border: 2px solid rgba(139,92,246,.4);
+    width: 100px; height: 100px; opacity: 0; pointer-events: none;
+}
+.mavis-orb-ring.r2 { width: 124px; height: 124px; border-color: rgba(79,110,247,.3); }
+.mavis-orb-ring.r3 { width: 148px; height: 148px; border-color: rgba(139,92,246,.18); }
+
+.mavis-orb.listening .mavis-orb-core { animation: orbBreathe 1.6s ease-in-out infinite; }
+.mavis-orb.listening .mavis-orb-ring { opacity: 1; animation: orbWave 1.6s ease-out infinite; }
+.mavis-orb.listening .mavis-orb-ring.r2 { animation-delay: .3s; }
+.mavis-orb.listening .mavis-orb-ring.r3 { animation-delay: .6s; }
+@keyframes orbBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes orbWave { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(1.15); opacity: 0; } }
+
+.mavis-orb.thinking .mavis-orb-core { animation: orbSpin 1.1s linear infinite; }
+@keyframes orbSpin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+.mavis-orb.speaking .mavis-orb-core { animation: orbPulse 0.9s ease-in-out infinite; }
+@keyframes orbPulse { 0%,100% { transform: scale(1); box-shadow: 0 0 30px rgba(109,93,252,.6); } 50% { transform: scale(1.06); box-shadow: 0 0 50px rgba(139,92,246,.9); } }
+
+.mavis-status { font-size: 14px; color: var(--text-muted, #6b7280); text-align: center; min-height: 20px; margin-bottom: 8px; }
+.mavis-transcript { font-size: 15px; color: var(--text, #1a1a2e); text-align: center; min-height: 24px;
+    max-width: 100%; word-break: break-word; padding: 8px 12px; border-radius: 12px;
+    background: rgba(139,92,246,.08); margin-bottom: 6px; }
+
+.mavis-camera { width: 100%; margin: 6px 0 10px; position: relative; border-radius: 14px; overflow: hidden; }
+.mavis-camera video { width: 100%; display: block; background: #000; max-height: 240px; object-fit: cover; }
+.mavis-capture { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    border: none; cursor: pointer; padding: 8px 18px; border-radius: 20px; color: #fff; font-size: 14px;
+    background: linear-gradient(135deg,#4f6ef7,#8b5cf6); box-shadow: 0 4px 14px rgba(79,110,247,.5); }
+
+.mavis-controls { display: flex; gap: 14px; justify-content: center; margin: 10px 0 8px; }
+.mavis-controls button {
+    width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer; font-size: 19px;
+    background: rgba(0,0,0,.05); color: var(--text,#1a1a2e); transition: all .2s ease;
+    display: flex; align-items: center; justify-content: center;
+}
+.mavis-controls button:hover { background: rgba(139,92,246,.15); }
+.mavis-controls .mavis-mic { background: linear-gradient(135deg,#4f6ef7,#8b5cf6); color: #fff; }
+.mavis-controls .mavis-mic.active { animation: micActive 1.2s ease-in-out infinite; box-shadow: 0 0 0 0 rgba(139,92,246,.6); }
+@keyframes micActive { 0% { box-shadow: 0 0 0 0 rgba(139,92,246,.6); } 100% { box-shadow: 0 0 0 16px rgba(139,92,246,0); } }
+.mavis-controls button:disabled { opacity: .4; cursor: not-allowed; }
+
+.mavis-hints { font-size: 12px; color: var(--text-muted,#6b7280); text-align: center; line-height: 1.6; margin-top: 6px; }
+.mavis-text-input { width: 100%; margin-top: 12px; padding: 11px 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,.1);
+    font-size: 14px; background: rgba(0,0,0,.03); color: var(--text,#1a1a2e); outline: none; }
+.mavis-text-input:focus { border-color: #8b5cf6; }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .mavis-panel { --text: #f1f1f7; --text-muted: #9aa0b4; }
+[data-theme="dark"] .mavis-fab { box-shadow: 0 10px 30px rgba(139,92,246,.5); }
