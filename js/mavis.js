@@ -213,15 +213,14 @@
 
     function extractModel(text) {
         const map = {
-            'gpt-4.1': 'gpt-4.1', 'gpt4.1': 'gpt-4.1', 'gpt4': 'gpt-4.1', 'gpt-4': 'gpt-4.1',
-            'gpt-5.5': 'gpt-5.5', '5.5': 'gpt-5.5', 'gpt5.5': 'gpt-5.5',
-            'gpt-5': 'gpt-5', 'gpt5': 'gpt-5',
-            'gpt-5-nano': 'gpt-5-nano', '5 nano': 'gpt-5-nano', 'nano': 'gpt-5-nano',
-            'gpt-5.4': 'gpt-5.4-nano', '5.4': 'gpt-5.4-nano',
-            'claude': 'claude-4.6-sonnet', 'sonnet': 'claude-4.6-sonnet',
-            'gemini': 'gemini-3.1-flash', 'flash': 'gemini-3.1-flash',
-            'hunyuan': 'hunyuan', '混元': 'hunyuan',
-            '自托管': '__custom__', '后端': '__custom__', '我的账号': '__custom__', 'github': '__custom__'
+            '极速': 'pollinations-fast', 'fast': 'pollinations-fast', 'nano': 'pollinations-fast',
+            '深度': 'pollinations-deep', 'deep': 'pollinations-deep', '思考': 'pollinations-deep',
+            'gpt-4.1': 'pollinations', 'gpt4.1': 'pollinations', 'gpt4': 'pollinations', 'gpt-4': 'pollinations',
+            'gpt-5.5': 'pollinations', '5.5': 'pollinations', 'gpt5.5': 'pollinations',
+            'gpt-5': 'pollinations', 'gpt5': 'pollinations',
+            '免费': 'pollinations', '直连': 'pollinations', 'pollinations': 'pollinations',
+            'puter': 'puter', '登录': 'puter',
+            '自托管': '__custom__', '后端': '__custom__', '我的账号': '__custom__', 'github': '__custom__', '自定义': '__custom__', '混元': '__custom__'
         };
         for (const k in map) if (text.toLowerCase().includes(k)) return map[k];
         return null;
@@ -345,12 +344,14 @@
                 if (model === '__custom__') {
                     // 服务端注入系统提示，这里把人格塞进用户消息
                     reply = await streamProxy(MAVIS_PERSONA + '\n\n用户原话：' + text, conv.messages.slice(0, -1), cb);
+                } else if (model === 'pollinations' || model === 'pollinations-fast' || model === 'pollinations-deep') {
+                    reply = await streamPollinations(conv.messages, cb, 'default', MAVIS_PERSONA);
                 } else if (typeof puter !== 'undefined') {
                     const msgs = [{ role: 'system', content: MAVIS_PERSONA }]
                         .concat(conv.messages.slice(0, -1).map(m => ({ role: m.role, content: m.content })));
-                    reply = await streamPuter(msgs, model, cb);
+                    reply = await streamPuter(msgs, model === 'puter' ? 'gpt-5.5' : model, cb);
                 } else {
-                    throw new Error('Puter.js 未加载');
+                    reply = await streamPollinations(conv.messages, cb, 'default', MAVIS_PERSONA);
                 }
                 finalizeStreamingBubble(bubble, raw || reply || '');
                 conv.messages.push({ role: 'assistant', content: raw || reply || '' });
@@ -359,17 +360,25 @@
             } catch (err) {
                 console.error('[mavis] 错误:', err);
                 const msg = err.message || '出错了';
-                if (/auth|login|sign in|未登录/i.test(msg) && typeof showAuthCard === 'function') {
-                    if (bubble && bubble.wrapper && bubble.wrapper.parentNode) bubble.wrapper.remove();
-                    showAuthCard();
+                if (err.name === 'AbortError' || stopRequested) {
+                    finalizeStreamingBubble(bubble, raw || '（已停止）');
+                    if (typeof saveConversations === 'function') saveConversations();
                     return;
                 }
-                // GitHub Token 失效（被吊销/过期）→ 友好提示并建议切换 Puter
-                if (/401|API Key|unauthorized|token|权限|无效/i.test(msg)) {
-                    const tip = '我的 GitHub Token 好像失效了（可能已被吊销）。你可以：① 在 GitHub 重新生成一个 Token 并配置；② 或把模型切到 Puter 系列（如 GPT-5.5），点一下登录就能用。';
+                if (/auth|login|401|unauthorized|token|API Key|权限|无效/i.test(msg)) {
+                    const tip = '自定义后端鉴权失败，已自动切回免费直连；如要用自托管后端，请在「钥匙」里检查 API Key。';
+                    if (typeof showErrorInBubble === 'function') showErrorInBubble(bubble, tip);
+                    chatSettings.model = 'pollinations';
+                    if (typeof saveChatSettings === 'function') saveChatSettings();
+                    if (typeof syncModelSelector === 'function') syncModelSelector();
+                    mavisSpeak('抱歉，后端钥匙不对，我切回免费直连了。');
+                    return;
+                }
+                if (/402|429|rate|limit|pollinations|fetch|network|频繁|Queue/i.test(msg)) {
+                    const tip = '免费通道暂时繁忙或受限，稍等几秒再问我。';
                     if (typeof showErrorInBubble === 'function') showErrorInBubble(bubble, tip);
                     else done(tip);
-                    mavisSpeak('抱歉，我的后端钥匙失效了，需要你重新配置一下。');
+                    mavisSpeak('免费通道有点忙，稍等一下再问我。');
                     return;
                 }
                 if (typeof showErrorInBubble === 'function') showErrorInBubble(bubble, msg);

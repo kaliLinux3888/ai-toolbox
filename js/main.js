@@ -74,27 +74,18 @@ const saveConfigBtn = $('#saveConfigBtn');
 // =============================================
 const MODEL_GROUPS = [
     {
-        label: 'OpenAI · 免费用',
+        label: '免费直连 · 零登录（推荐）',
         models: [
-            { id: 'gpt-5.5', name: 'GPT-5.5', desc: '最强推理与创作能力（推荐）', icon: 'fa-brain', badge: '推荐' },
-            { id: 'gpt-5-nano', name: 'GPT-5 Nano', desc: '极速响应，默认模型', icon: 'fa-bolt', badge: '极速' },
-            { id: 'gpt-5.4-nano', name: 'GPT-5.4 Nano', desc: '速度与质量均衡', icon: 'fa-star' },
-            { id: 'gpt-5.3-chat', name: 'GPT-5.3 Chat', desc: '对话场景优化', icon: 'fa-comment' },
-            { id: 'gpt-4.1', name: 'GPT-4.1', desc: '稳定可靠，长上下文', icon: 'fa-robot' },
-            { id: 'gpt-4o', name: 'GPT-4o', desc: '支持多模态（图文）', icon: 'fa-eye' }
+            { id: 'pollinations', name: '智能对话（免费直连）', desc: '无需登录/密钥，打开即用', icon: 'fa-bolt', badge: '零登录' },
+            { id: 'pollinations-fast', name: '极速模式', desc: '更简短的回答，响应更快', icon: 'fa-gauge-high' },
+            { id: 'pollinations-deep', name: '深度思考', desc: '更严谨、有结构的长回答', icon: 'fa-brain' }
         ]
     },
     {
-        label: '其他厂商 · 免费',
+        label: '高级（可选 · 需配置）',
         models: [
-            { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', desc: '长文写作与严谨推理', icon: 'fa-feather' },
-            { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash', desc: 'Google 极速模型', icon: 'fa-gem' }
-        ]
-    },
-    {
-        label: '高级',
-        models: [
-            { id: '__custom__', name: '自定义 API（自托管）', desc: '使用你的 Key，经后端代理', icon: 'fa-key', badge: '高级' }
+            { id: 'puter', name: 'Puter 免费（需登录）', desc: '一键登录后用 GPT-5.5', icon: 'fa-user', badge: '需登录' },
+            { id: '__custom__', name: '自定义 API（自托管）', desc: '你的 Key，经后端代理', icon: 'fa-key', badge: '自托管' }
         ]
     }
 ];
@@ -166,7 +157,7 @@ function loadChatSettings() {
             if (getModel(p.model)) return { model: p.model };
         }
     } catch (e) {}
-    return { model: 'gpt-5.5' };
+    return { model: 'pollinations' };
 }
 function saveChatSettings() { localStorage.setItem('ai_chat_settings', JSON.stringify(chatSettings)); }
 
@@ -271,7 +262,7 @@ function renderEmptyState() {
         <div class="chat-empty">
             <div class="empty-ico"><i class="fas fa-robot"></i></div>
             <h3>有什么可以帮你的？</h3>
-            <p>我是 AI智能助手，基于 Puter.js 免费直连主流大模型，支持流式回答与 Markdown 渲染。试试下面的问题：</p>
+            <p>我是 AI智能助手，默认通过免费直连通道（无需登录/密钥）回答，支持流式输出与 Markdown。试试下面的问题：</p>
             <div class="suggest-grid">
                 ${picks.map(p => `<button class="suggestion-chip" data-prompt="${escapeHtml(p.prompt)}"><i class="fas ${p.icon}"></i> ${escapeHtml(p.prompt)}</button>`).join('')}
             </div>
@@ -485,45 +476,47 @@ async function handleSendMessage() {
 
     try {
         let reply = '';
+        const cb = (full) => { raw = full; updateStreamingBubble(bubble, raw); };
+
         if (model === '__custom__') {
-            reply = await streamProxy(text, conv.messages.slice(0, -1), (full) => {
-                raw = full; updateStreamingBubble(bubble, raw);
-            });
+            reply = await streamProxy(text, conv.messages.slice(0, -1), cb);
+        } else if (model === 'pollinations' || model === 'pollinations-fast' || model === 'pollinations-deep') {
+            const mode = model === 'pollinations-fast' ? 'fast' : model === 'pollinations-deep' ? 'deep' : 'default';
+            reply = await streamPollinations(conv.messages, cb, mode);
         } else if (typeof puter !== 'undefined') {
-            reply = await streamPuter(buildPuterMessages(conv.messages), model, (full) => {
-                raw = full; updateStreamingBubble(bubble, raw);
-            });
+            reply = await streamPuter(buildPuterMessages(conv.messages), model === 'puter' ? 'gpt-5.5' : model, cb);
         } else {
-            throw new Error('Puter.js 未加载，请检查网络或配置自定义 API');
+            // 未加载 Puter：自动回退到免费直连（不强制登录）
+            chatSettings.model = 'pollinations'; saveChatSettings(); syncModelSelector();
+            reply = await streamPollinations(conv.messages, cb, 'default');
         }
 
-        if (stopRequested) {
-            raw = raw || reply || '（已停止生成）';
-        }
+        if (stopRequested) raw = raw || reply || '（已停止生成）';
         finalizeStreamingBubble(bubble, raw || reply || '');
         conv.messages.push({ role: 'assistant', content: raw || reply || '' });
         saveConversations();
     } catch (err) {
         console.error('[chat] 错误:', err);
         const msg = err.message || '出错了，请稍后再试';
-        if (/auth|login|sign in|未登录|not authenticated|unauthenticated|restricted|401|unauthorized|token|API Key|无效|权限/i.test(msg)) {
-            // 需要登录 / GitHub Token 失效：自动切换到 Puter 模型，并弹出一键登录卡片（一次登录即用）
-            if (backendAuto) {
-                try { chatSettings.model = 'gpt-5.5'; saveChatSettings(); syncModelSelector(); } catch (e) {}
-            }
-            if (bubble && bubble.wrapper && bubble.wrapper.parentNode) bubble.wrapper.remove();
-            showAuthCard();
+        if (err.name === 'AbortError') {
+            finalizeStreamingBubble(bubble, raw || '（已停止生成）');
+            conv.messages.push({ role: 'assistant', content: raw || '（已停止生成）' });
+            saveConversations();
             return;
-        } else if (/quota|limit|rate|429/i.test(msg)) {
-            showErrorInBubble(bubble, '当前模型触发限流，换一个免费模型再试（如 GPT-5 Nano）。');
-        } else if (/model/i.test(msg)) {
-            // 模型不可用，回退到 gpt-5-nano
-            try {
-                chatSettings.model = 'gpt-5-nano';
-                saveChatSettings();
-                syncModelSelector();
-                showErrorInBubble(bubble, `模型不可用，已自动切换到 GPT-5 Nano，请重新发送。`);
-            } catch (e) { showErrorInBubble(bubble, msg); }
+        }
+        if (/402|Payment|付费|subscription|deprecat/i.test(msg)) {
+            showErrorInBubble(bubble, '免费通道提示需要付费额度。可稍后重试，或到「钥匙」配置你自己的 API（自托管后端）获得稳定服务。');
+        } else if (/429|rate|limit|频繁|Queue full|quota/i.test(msg)) {
+            showErrorInBubble(bubble, '免费通道有点忙（限流），请稍等 5–10 秒再发一条。');
+        } else if (/pollinations|Failed to fetch|network|网络|fetch/i.test(msg)) {
+            showErrorInBubble(bubble, '暂时连不上免费 AI 服务，请检查网络后重试；或到「钥匙」配置自定义 API（自托管后端）。');
+        } else if (/auth|login|401|unauthorized|token|API Key|权限|无效/i.test(msg)) {
+            if (chatSettings.model === 'puter' && typeof showAuthCard === 'function') {
+                if (bubble && bubble.wrapper && bubble.wrapper.parentNode) bubble.wrapper.remove();
+                showAuthCard();
+                return;
+            }
+            showErrorInBubble(bubble, '自定义后端鉴权失败，请检查 API Key；或把模型切回「免费直连」。');
         } else {
             showErrorInBubble(bubble, msg);
         }
@@ -601,6 +594,78 @@ async function streamProxy(message, history, onToken) {
     return full;
 }
 
+// --- Pollinations 免费直连（零登录 / 零密钥 / 浏览器直连） ---
+// 说明：Pollinations 匿名通道对 system 角色与多轮 messages 可能返回 402，
+// 因此把「系统提示 + 完整对话历史」压成【一条 user 消息】发送（单轮=免费档）。
+// 其 SSE 已转付费，故本地逐字模拟流式；每 IP 仅允许 1 并发，故全局串行。
+let _aiLock = Promise.resolve();
+function withAiLock(fn) {
+    const run = _aiLock.then(fn, fn);
+    _aiLock = run.then(() => {}, () => {});
+    return run;
+}
+
+function buildPollinationsPrompt(messages, mode, persona) {
+    let base;
+    if (persona) {
+        base = persona;
+    } else if (mode === 'fast') {
+        base = '你是一个极简中文助手：回答尽量简短（1-3 句），直奔主题，不要寒暄。';
+    } else if (mode === 'deep') {
+        base = '你是一个严谨的中文助手：对复杂问题给出结构化、有深度的回答，可用分点与表格，必要时举例说明。';
+    } else {
+        base = buildSystemPrompt().replace(/当前时间：[^\n]*/, '').trim();
+    }
+    const hist = messages
+        .filter(m => m && m.content)
+        .map(m => (m.role === 'user' ? '用户' : '助手') + '：' + m.content)
+        .join('\n');
+    return `${base}\n\n以下是你与用户的对话记录（请结合上下文自然续接）：\n${hist}\n\n助手：`;
+}
+
+async function streamPollinations(messages, onToken, mode, persona) {
+    const prompt = buildPollinationsPrompt(messages, mode, persona);
+    return withAiLock(async () => {
+        if (stopRequested) return '';
+        abortCtrl = new AbortController();
+        let text = null, lastErr = null;
+        // 1) 先试 POST（单条 user 消息，避免 system/多轮触发 402）
+        try {
+            const res = await fetch('https://text.pollinations.ai/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: abortCtrl.signal,
+                body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+            });
+            if (res.ok) text = (await res.text()).trim();
+            else { const d = await res.json().catch(() => ({})); lastErr = d.error || `HTTP ${res.status}`; }
+        } catch (e) { lastErr = e.message || 'network'; }
+        // 2) POST 失败则试 GET（同一提示，压平为 URL）
+        if (text === null) {
+            try {
+                const res = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt), { signal: abortCtrl.signal });
+                if (res.ok) text = (await res.text()).trim();
+                else { const d = await res.json().catch(() => ({})); lastErr = d.error || `HTTP ${res.status}`; }
+            } catch (e) { lastErr = e.message || 'network'; }
+        }
+        if (text === null) throw new Error(lastErr || 'Pollinations 请求失败');
+        await simulateStream(text, onToken);
+        return text;
+    });
+}
+
+async function simulateStream(text, onToken) {
+    if (!text) return;
+    const step = text.length > 500 ? 4 : 2;
+    const delay = text.length > 500 ? 8 : 16;
+    for (let i = 0; i <= text.length; i += step) {
+        if (stopRequested) break;
+        onToken(text.slice(0, i));
+        await new Promise(r => setTimeout(r, delay));
+    }
+    if (!stopRequested) onToken(text);
+}
+
 function setStopUI(stopping) {
     if (stopping) {
         sendBtn.classList.add('stop');
@@ -647,7 +712,7 @@ function syncModelSelector() {
     const m = getModel(chatSettings.model);
     currentModelName.textContent = m.name;
     sidebarModelName.textContent = m.name;
-    currentModelBadge.textContent = m.id === '__custom__' ? '自托管' : '免费';
+    currentModelBadge.textContent = m.id.indexOf('pollinations') === 0 ? '零登录' : m.id === 'puter' ? '需登录' : m.id === '__custom__' ? '自托管' : '免费';
     // 重新渲染高亮
     modelDropdown.querySelectorAll('.model-option').forEach(opt => {
         opt.classList.toggle('active', opt.dataset.model === m.id);
@@ -1011,15 +1076,11 @@ function init() {
                 if (config.backend && !apiConfig.apiKey) {
                     backendAuto = true;
                     backendBase = base;
-                    apiConfig.provider = config.provider || 'github';
-                    backendModel = config.model || 'gpt-4.1';
-                    chatSettings.model = '__custom__';
-                    saveChatSettings();
                     updateApiSettingsBtn();
-                    syncModelSelector();
-                    break;
+                    // 注意：默认仍使用零登录的 Pollinations 免费直连；
+                    // 仅当用户在模型选择器里主动选择「自定义 API（自托管）」时才走此后端。
                 }
-            } catch (e) { /* 该候选不可用，尝试下一个 */ }
+            } catch (e) { /* 该候选不可用，忽略 */ }
         }
     })();
 
@@ -1033,7 +1094,7 @@ function init() {
     // 后端健康检查（仅自托管后端有效，GitHub Pages 会失败，忽略）
     fetch(`/api/health`).then(r => r.json()).then(data => {
         console.log(`✅ 后端已连接，支持: ${data.providers.join(', ')}`);
-    }).catch(() => console.log('ℹ️ 当前为静态托管（GitHub Pages），使用 Puter.js 免费直连'));
+    }).catch(() => console.log('ℹ️ 当前为静态托管（GitHub Pages），默认使用 Pollinations 免费直连'));
 }
 
 document.addEventListener('DOMContentLoaded', init);
