@@ -117,15 +117,15 @@ function buildSystemPrompt() {
 let apiConfig = loadConfig();
 let chatSettings = loadChatSettings();
 
-// 自托管后端是否可用（服务端已预置 GitHub Token，可零登录）
+// 自托管后端是否可用（服务端通过 gh auth token 预置 GitHub Copilot，可零登录）
 // 为 true 时，前端完全不持有任何 Token，所有鉴权在服务端完成
 let backendAuto = false;
-let backendModel = 'gpt-4.1';
+let backendModel = 'gpt-4o';
 // 后端基址：'' 表示同源（隧道/自托管场景）；否则为回退后端的绝对地址
 let backendBase = '';
 // 回退后端地址：当本站为纯静态托管（如 GitHub Pages）且同源无后端时，
 // 尝试连接此隧道后端，实现“永久地址 + 零登录”。隧道重启后需同步更新此值。
-const FALLBACK_BACKEND = 'https://charts-navy-training-parents.trycloudflare.com';
+const FALLBACK_BACKEND = 'https://cashiers-liquid-scheduling-paragraph.trycloudflare.com';
 
 let conversations = loadConversations();   // [{id,title,messages:[{role,content}]}]
 let activeId = conversations.length ? conversations[0].id : null;
@@ -712,7 +712,7 @@ function syncModelSelector() {
     const m = getModel(chatSettings.model);
     currentModelName.textContent = m.name;
     sidebarModelName.textContent = m.name;
-    currentModelBadge.textContent = m.id.indexOf('pollinations') === 0 ? '零登录' : m.id === 'puter' ? '需登录' : m.id === '__custom__' ? '自托管' : '免费';
+    currentModelBadge.textContent = m.id.indexOf('pollinations') === 0 ? '零登录' : m.id === 'puter' ? '需登录' : m.id === '__custom__' ? (backendAuto ? 'Copilot' : '自托管') : '免费';
     // 重新渲染高亮
     modelDropdown.querySelectorAll('.model-option').forEach(opt => {
         opt.classList.toggle('active', opt.dataset.model === m.id);
@@ -1076,9 +1076,13 @@ function init() {
                 if (config.backend && !apiConfig.apiKey) {
                     backendAuto = true;
                     backendBase = base;
+                    apiConfig.provider = config.provider || 'copilot';
+                    backendModel = config.model || 'gpt-4o';
+                    chatSettings.model = '__custom__';
+                    saveChatSettings();
                     updateApiSettingsBtn();
-                    // 注意：默认仍使用零登录的 Pollinations 免费直连；
-                    // 仅当用户在模型选择器里主动选择「自定义 API（自托管）」时才走此后端。
+                    syncModelSelector();
+                    break;
                 }
             } catch (e) { /* 该候选不可用，忽略 */ }
         }
@@ -1094,7 +1098,7 @@ function init() {
     // 后端健康检查（仅自托管后端有效，GitHub Pages 会失败，忽略）
     fetch(`/api/health`).then(r => r.json()).then(data => {
         console.log(`✅ 后端已连接，支持: ${data.providers.join(', ')}`);
-    }).catch(() => console.log('ℹ️ 当前为静态托管（GitHub Pages），默认使用 Pollinations 免费直连'));
+    }).catch(() => console.log('ℹ️ 当前为静态托管（GitHub Pages），默认使用 Copilot 后端（如隧道可用）或免费直连'));
 }
 
 document.addEventListener('DOMContentLoaded', init);

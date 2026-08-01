@@ -1,13 +1,11 @@
 /**
  * AI智能工具箱 - 一体化服务（前端静态 + 后端API代理）
  *
- * 支持: GitHub Models / ChatAnywhere / OpenRouter / Groq / Google Gemini
- * 前端 → 本服务(代理) → 免费AI API
+ * 主通道: GitHub Copilot API（免费，使用 gh auth token，零客户登录）
+ * 兼容: GitHub Models / ChatAnywhere / OpenRouter / Groq / Google Gemini
+ * 前端 → 本服务(代理) → 免费AI API（SSE 流式）
  *
- * 注：GitHub Pages 等纯静态托管无法运行此后端，前端会改用 Puter.js 免费直连。
- * 本后端用于本地或自托管场景，并支持 SSE 流式输出。
- *
- * 安全：用户的 GitHub Token 仅存在于服务端（gh auth token / GITHUB_TOKEN 环境变量），
+ * 安全：用户的 Token 仅存在于服务端（gh auth token / GITHUB_TOKEN 环境变量），
  * 绝不通过 /api/config 或任何接口返回给浏览器。
  */
 
@@ -35,6 +33,12 @@ app.use(express.static(frontendPath));
 // 服务商配置
 // =============================================
 const PROVIDERS = {
+    copilot: {
+        name: 'GitHub Copilot',
+        baseUrl: 'https://api.githubcopilot.com/chat/completions',
+        defaultModel: 'gpt-4o',
+        docs: 'https://github.com/features/copilot'
+    },
     github: {
         name: 'GitHub Models',
         baseUrl: 'https://models.inference.ai.azure.com/chat/completions',
@@ -93,11 +97,11 @@ app.get('/api/config', (req, res) => {
     const hasToken = !!getDefaultGitHubToken();
     res.json({
         backend: hasToken,
-        provider: 'github',
-        model: 'gpt-4.1',
+        provider: 'copilot',
+        model: 'gpt-4o',
         hint: hasToken
-            ? '已启用服务端 GitHub Models 代理，使用你的 GitHub 账号免登录对话'
-            : '未检测到服务端 GitHub Token，将回退到 Puter 免费通道'
+            ? '已启用 GitHub Copilot 代理，零登录对话（gpt-4o / gpt-4.1）'
+            : '未检测到服务端 GitHub Token，将回退到免费直连通道'
     });
 });
 
@@ -117,7 +121,7 @@ app.post('/api/chat', async (req, res) => {
             const defaultToken = getDefaultGitHubToken();
             if (defaultToken) {
                 apiKey = defaultToken;
-                provider = 'github';
+                provider = 'copilot';
             } else {
                 return res.status(400).json({ error: '请先配置 API Key', hint: '这是免费服务，无需信用卡，详见设置面板' });
             }
